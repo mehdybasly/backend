@@ -49,4 +49,12 @@ export class AuthService {
             }
             return user;
     } 
+    async update(id:number){
+        const user = await this.userService.findone(id)
+
+        if(!user){
+            throw new NotFoundException('Id not found'); 
+        }
+        
+    }
 }

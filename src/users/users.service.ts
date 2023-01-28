@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './users.entity';
@@ -12,6 +12,9 @@ export class UsersService {
         return this.repo.save(user);
     }
     findone(id : number){
+        if(!id){
+            throw new BadRequestException('this user is not logged in ')
+        }
         return this.repo.findOneBy({id});
     }
     find(email : string ){
@@ -31,6 +34,6 @@ export class UsersService {
         if (!user) {
             throw new NotFoundException('id not found');
         }
-       return this.repo.remove(user)
+       return this.repo.remove(user);
     }
 }

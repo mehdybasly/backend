@@ -1,11 +1,14 @@
-import { Controller, Post, Body, Get, Param, Query, Delete, Patch, NotFoundException, SerializeOptions, UseInterceptors } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Query, Delete, Patch, NotFoundException, SerializeOptions, UseInterceptors, Session, UseGuards } from '@nestjs/common';
 import { NotFoundError } from 'rxjs';
 import { serialized, SerializedInterceptor } from 'src/interceptors/serialize.interceptor';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { userDto } from './dtos/user.dto';
+import { CurrentUser } from './decorators/current-user.decorator';
 import { UsersService } from './users.service';
+import { User } from './users.entity';
+import { AuthGuard } from './auth.guard';
 
 @Controller('auth')
 @serialized(userDto)
@@ -13,16 +16,33 @@ export class UsersController {
     constructor(private usersService: UsersService , 
         private authSerive : AuthService){}
 
+    // @Get('whoami')
+    // whoAmI(@Session() session:any){
+    //   return this.usersService.findone(session.userId)
+    // }
 
-
+    @Get('whoami')
+    @UseGuards(AuthGuard)
+    whoami(@CurrentUser() user:User){
+        return user ;
+    }
+    @Post('signout')
+    signout(@Session() session:any){
+        session.userId = null;
+    }
     @Post('/signup')
-    create(@Body() body : CreateUserDto){
-    return this.authSerive.signUp(body.email , body.password);
+   async create(@Body() body : CreateUserDto , @Session() session:any){
+   const user = await this.authSerive.signUp(body.email , body.password);
+    session.userId= user.id;
+    return user
     }
 
     @Post('/signin')
-    signin(@Body() body: CreateUserDto){
-        return this.authSerive.signIn(body.email , body.password)
+    async signin(@Body() body: CreateUserDto , @Session() session : any){
+       const user =await this.authSerive.signIn(body.email , body.password);
+
+        session.userId= user.id
+        return user
     }
 
 
